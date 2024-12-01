@@ -1,0 +1,128 @@
+- name: version dump
+  hosts: iosxe
+  gather_facts: no
+
+  tasks:
+    - name: show version
+      cisco.ios.ios_command:
+        commands: show version
+      register: result
+    - name: shot versions
+      debug:
+        var: result.stdout_lines[0][0]
+
+- name: router 1
+  hosts: rt1
+  gather_facts: no
+  tasks:
+    - name: rt1-interfaces
+      cisco.ios.ios_interfaces:
+        config:
+          - name: Ethernet0/1
+            description: "to sw1"
+            enabled: true
+          - name: Ethernet0/2
+            description: "to pc1"
+            enabled: true
+          - name: loopback0
+            enabled: true
+        state: merged
+    - name: rt1-interface-addr
+      cisco.ios.ios_l3_interfaces:
+        config:
+          - name: Ethernet0/1
+            ipv4:
+              - address: 10.0.0.1/24
+          - name: Ethernet0/2
+            ipv4:
+              - address: 10.101.0.1/24
+          - name: loopback0
+            ipv4:
+              - address: 10.255.0.1/32
+        state: merged
+    - name: OSPF V2 configuration
+      cisco.ios.ios_ospfv2:
+        config:
+          processes:
+            - process_id: 1
+              router_id: 10.255.0.1
+              log_adjacency_changes:
+                set: true
+              network:
+                - address: 10.0.0.0
+                  wildcard_bits: 0.0.0.255
+                  area: 0
+                - address: 10.101.0.0
+                  wildcard_bits: 0.0.0.255
+                  area: 0
+                - address: 10.255.0.1
+                  wildcard_bits: 0.0.0.0
+                  area: 0
+- name: router 2
+  hosts: rt2
+  gather_facts: no
+  tasks:
+    - name: rt2-interfaces
+      cisco.ios.ios_interfaces:
+        config:
+          - name: Ethernet0/1
+            description: "to sw1"
+            enabled: true
+          - name: Ethernet0/2
+            description: "to pc2"
+            enabled: true
+          - name: loopback0
+            enabled: true
+        state: merged
+    - name: rt2-interface-addr
+      cisco.ios.ios_l3_interfaces:
+        config:
+          - name: Ethernet0/1
+            ipv4:
+              - address: 10.0.0.2/24
+          - name: Ethernet0/2
+            ipv4:
+              - address: 10.102.0.1/24
+          - name: loopback0
+            ipv4:
+              - address: 10.255.0.2/32
+        state: merged
+    - name: OSPF V2 configuration
+      cisco.ios.ios_ospfv2:
+        config:
+          processes:
+            - process_id: 1
+              router_id: 10.255.0.2
+              log_adjacency_changes:
+                set: true
+              network:
+                - address: 10.0.0.0
+                  wildcard_bits: 0.0.0.255
+                  area: 0
+                - address: 10.102.0.0
+                  wildcard_bits: 0.0.0.255
+                  area: 0
+                - address: 10.255.0.2
+                  wildcard_bits: 0.0.0.0
+                  area: 0
+
+- hosts: pc1
+  gather_facts: no
+  tasks:
+    - name: link up ip address
+      ansible.builtin.raw: sudo ip link set eth1 up || true
+    - name : set ip address
+      ansible.builtin.raw: sudo ip addr add 10.101.0.2/24 dev eth1 || true
+    - name: set route
+      ansible.builtin.raw: sudo ip route add 10.0.0.0/8 via 10.101.0.1 || true
+
+- hosts: pc2
+  gather_facts: no
+  tasks:
+    - name: link up ip address
+      ansible.builtin.raw: sudo ip link set eth1 up || true
+    - name : set ip address
+      ansible.builtin.raw: sudo ip addr add 10.102.0.2/24 dev eth1 || true
+    - name: set route
+      ansible.builtin.raw: sudo ip route add 10.0.0.0/8 via 10.102.0.1 || true
+

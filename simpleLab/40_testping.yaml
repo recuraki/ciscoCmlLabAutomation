@@ -1,0 +1,41 @@
+- hosts: [rt1, rt2]
+  gather_facts: no
+  tasks:
+    - name: show ospf neighbor
+      cisco.ios.ios_command:
+        commands: show ip ospf neighbor
+      register: result
+    - name: display ospf neighbor
+      debug:
+        var: result.stdout_lines
+    - name: OSPF state is FULL
+      assert:
+        that: result.stdout[0].find("FULL") != -1
+    - name: ping to lo0.RT1
+      cisco.ios.ios_ping:
+        count: 3
+        dest: 10.255.0.1
+      retries: 3
+    - name: ping to lo0.RT2
+      cisco.ios.ios_ping:
+        count: 3
+        dest: 10.255.0.2
+      retries: 3
+    - name: ping to pc1
+      cisco.ios.ios_ping:
+        count: 3
+        dest: 10.101.0.2
+      retries: 3
+    - name: ping to pc2
+      cisco.ios.ios_ping:
+        count: 3
+        dest: 10.102.0.2
+      retries: 3
+- hosts: [pc1, pc2]
+  gather_facts: no
+  tasks:
+    - name: ping to pc1
+      ansible.builtin.raw: ping 10.101.0.2 -c 1 && true
+    - name: ping to pc2
+      ansible.builtin.raw: ping 10.102.0.2 -c 1 && true
+

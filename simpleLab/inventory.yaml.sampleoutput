@@ -1,0 +1,28 @@
+all:
+  children:
+    iosxe:
+      hosts:
+        rt1:
+          ansible_host: 192.168.101.222
+          ansible_network_os: ios
+        rt2:
+          ansible_host: 192.168.101.223
+          ansible_network_os: ios
+        sw1:
+          ansible_host: 192.168.101.221
+          ansible_network_os: ios
+      vars:
+        ansible_connection: network_cli
+        ansible_network_cli_ssh_type: paramiko
+    pc:
+      hosts:
+        pc1:
+          ansible_host: 192.168.101.224
+        pc2:
+          ansible_host: 192.168.101.225
+  vars:
+    ansible_host_key_checking: false
+    ansible_password: cisco
+    ansible_ssh_args: -C -o ControlMaster=auto -o ControlPersist=60s -o UserKnownHostsFile=/dev/null
+      -o StrictHostKeyChecking=no
+    ansible_user: cisco
