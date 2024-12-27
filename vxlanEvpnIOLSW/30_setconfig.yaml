@@ -1,0 +1,16 @@
+- hosts: pc1
+  gather_facts: no
+  tasks:
+    - name: link up ip address
+      ansible.builtin.raw: sudo ip link set eth1 up || true
+    - name : set ip address
+      ansible.builtin.raw: sudo ip addr add 10.100.0.1/24 dev eth1 || true
+
+- hosts: pc2
+  gather_facts: no
+  tasks:
+    - name: link up ip address
+      ansible.builtin.raw: sudo ip link set eth1 up || true
+    - name : set ip address
+      ansible.builtin.raw: sudo ip addr add 10.100.0.2/24 dev eth1 || true
+

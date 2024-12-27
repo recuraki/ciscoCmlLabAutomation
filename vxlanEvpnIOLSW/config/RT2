@@ -1,0 +1,162 @@
+version 17.15
+service timestamps debug datetime msec
+service timestamps log datetime msec
+!
+hostname rt2
+!
+boot-start-marker
+boot-end-marker
+!
+!
+vrf definition management
+ !
+ address-family ipv4
+ exit-address-family
+ !
+ address-family ipv6
+ exit-address-family
+!
+no aaa new-model
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+ip audit notify log
+ip audit po max-events 100
+no ip domain lookup
+ip domain name cisco
+ip cef
+login on-success log
+no ipv6 cef
+!
+!
+!
+!
+!
+!
+!
+vtp mode off
+l2vpn evpn
+ logging peer state
+ replication-type ingress
+ router-id Loopback1
+ route-target auto vni
+!
+l2vpn evpn instance 1 vlan-based
+ encapsulation vxlan
+ route-target export 65000:1
+ route-target import 65000:1
+ replication-type ingress
+!
+!
+!
+!
+!
+memory free low-watermark processor 79593
+!
+!
+spanning-tree mode rapid-pvst
+spanning-tree extend system-id
+!
+username cisco privilege 15 password 0 cisco
+!
+!
+vlan configuration 100
+ member evpn-instance 1 vni 10100
+vlan internal allocation policy ascending
+!
+vlan 100
+!
+!
+!
+!
+!
+interface Loopback0
+ ip address 192.168.255.2 255.255.255.255
+!
+interface Loopback1
+ ip address 192.168.254.2 255.255.255.255
+!
+interface Ethernet0/0
+ no switchport
+ vrf forwarding management
+! ip address dhcp
+!
+interface Ethernet0/1
+ no switchport
+ ip address 192.168.2.2 255.255.255.0
+no shutdown
+!
+interface Ethernet0/2
+ switchport access vlan 100
+ switchport mode access
+ spanning-tree portfast
+no shutdown
+!
+interface Ethernet0/3
+!
+interface nve1
+ no ip address
+ source-interface Loopback1
+ host-reachability protocol bgp
+ member vni 10100 ingress-replication
+!
+router bgp 65002
+ bgp router-id 192.168.255.2
+ bgp log-neighbor-changes
+ bgp graceful-restart
+ no bgp default ipv4-unicast
+ neighbor 192.168.2.1 remote-as 65003
+ neighbor 192.168.254.1 remote-as 65001
+ neighbor 192.168.254.1 ebgp-multihop 255
+ neighbor 192.168.254.1 update-source Loopback1
+ !
+ address-family ipv4
+  redistribute connected
+  neighbor 192.168.2.1 activate
+  neighbor 192.168.2.1 soft-reconfiguration inbound
+  no neighbor 192.168.254.1 activate
+ exit-address-family
+ !
+ address-family l2vpn evpn
+  neighbor 192.168.254.1 activate
+  neighbor 192.168.254.1 send-community both
+  neighbor 192.168.254.1 next-hop-unchanged
+  neighbor 192.168.254.1 soft-reconfiguration inbound
+ exit-address-family
+!
+ip forward-protocol nd
+!
+!
+ip http server
+ip http secure-server
+ip ssh bulk-mode 131072
+ip ssh server algorithm authentication password
+ip route vrf management 0.0.0.0 0.0.0.0 192.168.101.1
+!
+no logging btrace
+!
+!
+!
+control-plane
+!
+!
+!
+line con 0
+ logging synchronous
+line aux 0
+line vty 0 4
+ login local
+ transport input telnet ssh
+!
+!
+end

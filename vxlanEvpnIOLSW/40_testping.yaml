@@ -1,0 +1,8 @@
+- hosts: [pc1, pc2]
+  gather_facts: no
+  tasks:
+    - name: ping to pc1
+      ansible.builtin.raw: ping 10.100.0.1 -c 1 && true
+    - name: ping to pc2
+      ansible.builtin.raw: ping 10.100.0.2 -c 1 && true
+
