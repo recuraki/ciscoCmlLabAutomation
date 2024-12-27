@@ -1,0 +1,217 @@
+version 17.15
+service timestamps debug datetime msec
+service timestamps log datetime msec
+!
+hostname rt2
+!
+boot-start-marker
+boot-end-marker
+!
+!
+vrf definition management
+ !
+ address-family ipv4
+ exit-address-family
+ !
+ address-family ipv6
+ exit-address-family
+!
+no aaa new-model
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+no ip domain lookup
+ip domain name cisco
+ip cef
+login on-success log
+no ipv6 cef
+!
+!
+!
+!
+!
+!
+!
+!
+l2vpn evpn
+ logging peer state
+ replication-type ingress
+ router-id Loopback1
+ route-target auto vni
+!
+l2vpn evpn instance 1 vlan-based
+ encapsulation vxlan
+ route-target export 65000:1
+ route-target import 65000:1
+ replication-type ingress
+!
+!
+!
+crypto pki trustpoint TP-self-signed-131184660
+ enrollment selfsigned
+ subject-name cn=IOS-Self-Signed-Certificate-131184660
+ revocation-check none
+ rsakeypair TP-self-signed-131184660
+ hash sha512
+!
+!
+crypto pki certificate chain TP-self-signed-131184660
+ certificate self-signed 01
+  3082032E 30820216 A0030201 02020101 300D0609 2A864886 F70D0101 0D050030
+  30312E30 2C060355 04030C25 494F532D 53656C66 2D536967 6E65642D 43657274
+  69666963 6174652D 31333131 38343636 30301E17 0D323431 32323730 36313630
+  385A170D 33343132 32373036 31363038 5A303031 2E302C06 03550403 0C25494F
+  532D5365 6C662D53 69676E65 642D4365 72746966 69636174 652D3133 31313834
+  36363030 82012230 0D06092A 864886F7 0D010101 05000382 010F0030 82010A02
+  82010100 B072C382 E7F7A07C 6FFF7AE9 E3D67F04 73C490DF 7A1C877D ADFDB6E6
+  C8E5B2AD 8BF40B8A 01136D53 E120E9F5 868DB23C C14E642A 40F13FA9 2F079AB2
+  B8096A3F 70F71090 D224B740 512E79A5 222BFF7B 4ADA05A1 85413A63 BA317021
+  E0693BF9 F35D574D 222958DD 762AE1FD 6E41F16C 4DCFBDB1 85822D9B 1855729A
+  1C74DE5C B8AAD85D FC028052 492F3065 4C301C70 77555428 3AF954C9 027FED20
+  B0412917 030E68F5 D0C9C254 9A66FB9B A50E4FDF 60577B05 B8F40251 C40AF8E8
+  528E4D0B 727965B5 6EB6E599 BAAA14C2 7CE1C28C 4AA338AB 3CC6B26E 33E27F2F
+  167AD019 123AB210 877A78FA 647B0E09 10243180 31DFAA5F 889746E0 144F406F
+  BD03FDE3 02030100 01A35330 51301D06 03551D0E 04160414 B3D32EB1 7796513B
+  01FFCF98 BD801BF7 06A64829 301F0603 551D2304 18301680 14B3D32E B1779651
+  3B01FFCF 98BD801B F706A648 29300F06 03551D13 0101FF04 05300301 01FF300D
+  06092A86 4886F70D 01010D05 00038201 01003EA5 193DD3D0 B36AF71D 1F9A0C25
+  AF297BE7 B4B51278 50DEC39F B72C8409 33332821 8A1951E4 2B9C3259 C5707478
+  CBA1448C 9A6E84DA 7FC06128 EA852CEF BC9F9FD1 6F2C1376 F45EC853 E20F315F
+  4280F132 67BE63CA 037CFE99 128EBAA2 7B73E388 43CE3EF6 A0EB7E28 ECD22B72
+  A5F8CF7F 8B38FC1D FBF8BEC0 1E61711B 95E640AB ED8448B4 95CE68EC 47DAEA57
+  DF195A7E 3AFEF0AB B1A3497C 8BAE8D7C 4A331A71 7D7E2ECD D8FE8E9C 4D2602E1
+  36212F9A B9EFADB8 96C5319A 18822BA6 701AB8BD 1EDA3A9D 1F6323B8 D6C95320
+  4F0FD910 E0B12B31 B7722367 78186C6B BBDB9F49 B85B033C 08D12A05 0C17C5A0
+  811E20E0 6B85867B 84B41039 5378D483 1110
+        quit
+!
+!
+memory free low-watermark processor 79593
+!
+!
+spanning-tree mode rapid-pvst
+!
+!
+username cisco privilege 15 password 0 cisco
+bridge-domain 100
+ member Ethernet0/2 service-instance 100
+ member evpn-instance 1 vni 10100
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ ip address 192.168.255.2 255.255.255.255
+!
+interface Loopback1
+ ip address 192.168.254.2 255.255.255.255
+!
+interface Ethernet0/0
+ vrf forwarding management
+! ip address dhcp
+!
+interface Ethernet0/1
+ no shut
+ ip address 192.168.2.2 255.255.255.0
+!
+interface Ethernet0/2
+ no shut
+ no ip address
+ bridge-group 100
+ service instance 100 ethernet
+  encapsulation untagged
+ !
+!
+interface Ethernet0/3
+ no ip address
+ shutdown
+!
+interface BDI100
+ no ip address
+ no shut
+!
+interface nve1
+ no ip address
+ source-interface Loopback1
+ host-reachability protocol bgp
+ member vni 10100 ingress-replication
+!
+router bgp 65002
+ bgp router-id 192.168.255.2
+ bgp log-neighbor-changes
+ bgp graceful-restart
+ no bgp default ipv4-unicast
+ neighbor 192.168.2.1 remote-as 65003
+ neighbor 192.168.254.1 remote-as 65001
+ neighbor 192.168.254.1 ebgp-multihop 255
+ neighbor 192.168.254.1 update-source Loopback1
+ !
+ address-family ipv4
+  redistribute connected
+  neighbor 192.168.2.1 activate
+  neighbor 192.168.2.1 soft-reconfiguration inbound
+ exit-address-family
+ !
+ address-family l2vpn evpn
+  neighbor 192.168.254.1 activate
+  neighbor 192.168.254.1 send-community both
+  neighbor 192.168.254.1 next-hop-unchanged
+  neighbor 192.168.254.1 soft-reconfiguration inbound
+ exit-address-family
+!
+ip forward-protocol nd
+!
+!
+ip http server
+ip http secure-server
+ip route vrf management 0.0.0.0 0.0.0.0 192.168.101.1
+ip ssh bulk-mode 131072
+ip ssh server algorithm authentication password
+!
+no logging btrace
+!
+!
+!
+control-plane
+!
+!
+!
+line con 0
+ logging synchronous
+line aux 0
+line vty 0 4
+ login local
+ transport input telnet ssh
+!
+!
+!
+!
+end
